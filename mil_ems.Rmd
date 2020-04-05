@@ -1,0 +1,131 @@
+---
+title: "Milwaukee EMS"
+author: "Anne Watkins"
+date: "4/3/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+```{r}
+library(devtools)
+devtools::install_github("weinbergerlab/ExcessILI")
+library(ExcessILI)
+library(cdcfluview)
+```
+
+
+```{r}
+mwk15=read.csv("./Data/mfdems15.csv")
+mwk16=read.csv("./Data/mfdems16.csv")
+mwk17=read.csv("./Data/mfdems17.csv")
+mwk18=read.csv("./Data/mfdems18.csv")
+mwk20=read.csv("./Data/mfdems.csv")
+mwk15$Incident.Date=substr(mwk15$Incident.Date,1,10)
+mwk16$Incident.Date=substr(mwk16$Incident.Date,1,10)
+mwk17$Incident.Date=substr(mwk17$Incident.Date,1,10)
+mwk18$Incident.Date=substr(mwk18$Incident.Date,1,10)
+mwk20$Incident.Date=substr(mwk20$Incident.Date,1,10)
+mwk15$Incident.Date=as.Date(mwk15$Incident.Date, '%Y-%m-%d')
+mwk16$Incident.Date=as.Date(mwk16$Incident.Date, '%Y-%m-%d')
+mwk17$Incident.Date=as.Date(mwk17$Incident.Date, '%Y-%m-%d')
+mwk18$Incident.Date=as.Date(mwk18$Incident.Date, '%Y-%m-%d')
+mwk20$Incident.Date=as.Date(mwk20$Incident.Date, '%Y-%m-%d')
+mwk1=rbind(mwk15,mwk16,mwk17,mwk18,mwk20)
+mwk1$state=0
+mwk1$state='WI'
+```
+
+```{r}
+table(mwk1$Original.Call.for.Service.Type)#,mwk1$Final.Call.for.Service.Type)
+table(mwk1$Final.Call.for.Service.Type)
+```
+
+
+```{r}
+mwk1$covid=0
+mwk1$covid[grep('COVID',mwk1$Original.Call.for.Service.Type)]=1
+mwk1$covid[grep('Pandemic/Flu',mwk1$Original.Call.for.Service.Type)]=1
+
+mwk1$breath=0
+mwk1$breath[grep('Breathing Problems',mwk1$Original.Call.for.Service.Type)]=1
+
+mwk1$age=1
+
+```
+
+```{r}
+ts1<-ts_format(line.list=mwk1, datevar='Incident.Date', statevar='state',agevar='age', syndromes=c('breath','covid'), remove.final = T)
+
+plot(ts1$Incident.Date,ts1$breath,type='l')
+
+
+excess_cases1=excessCases(ds=ts1,
+                          datevar='Incident.Date',
+                          statevar='state',
+                          denom.var = 'all.visits',
+                          adj.flu='auto',
+                          use.syndromes=c('breath','covid'),
+                          time.res='day'
+                          )
+
+dashboardPlot(excess_cases1)
+```
+
+```{r}
+dates <-
+  excess_cases1[[1]][[1]][[1]]$date
+
+unexplained.cases <-
+  excessExtract(ds = excess_cases1,
+                syndrome = "breath",
+                extract.quantity = "unexplained.cases")
+
+unexplained.log.rr <-
+  excessExtract(ds = excess_cases1,
+                syndrome = "breath",
+                extract.quantity = "resid1")
+
+denom <-
+ excessExtract(ds = excess_cases1,
+                syndrome = "breath",
+                extract.quantity = "denom")
+
+
+upi <-
+  excessExtract(ds = excess_cases1,
+                syndrome = "breath",
+                extract.quantity = "upi")
+
+lpi <-
+  excessExtract(ds = excess_cases1,
+                syndrome = "breath",
+                extract.quantity = "lpi")
+
+obs <-
+  ExcessILI::excessExtract(ds = excess_cases1,
+                syndrome = "breath",
+                extract.quantity = "y")
+
+pred <-
+  ExcessILI::excessExtract(ds = excess_cases1,
+                syndrome = "breath",
+                extract.quantity = "pred")
+
+result.object <-
+  list('dates'=dates,
+       'obs'=obs[,,1],
+       'pred'=pred[,,1],
+       'unexplained.cases'=unexplained.cases[,,1],
+       'unexplained.log.rr'=unexplained.log.rr[,,1])
+```
+
