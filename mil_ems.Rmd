@@ -66,15 +66,29 @@ mwk1$age=1
 ```{r}
 ts1<-ts_format(line.list=mwk1, datevar='Incident.Date', statevar='state',agevar='age', syndromes=c('breath','covid'), remove.final = T)
 
-plot(ts1$Incident.Date,ts1$breath,type='l')
+ts1=ts1[order(ts1$Incident.Date),]
+tmin=ts1$Incident.Date[1]
+tmax=ts1$Incident.Date[nrow(ts1)]
+dates=seq(tmin,tmax,by='day')
+dates.df=data.frame(list(Incident.Date=dates))
+ts2=merge(ts1,dates.df,all=T)
+for(j in 2:7){
+  ts2[which(is.na(ts2[,j])),j]=0
+}
+ts2$state[which(ts2$state==0)]='WI'
+ts2$sub.statevar[which(ts2$sub.statevar==0)]='WI'
+
+ts2$both=ts2$breath + ts2$covid
+ts2=na.omit(ts2)
+plot(ts2$Incident.Date,ts2$both,type='l')
 
 
-excess_cases1=excessCases(ds=ts1,
+excess_cases1=excessCases(ds=ts2,
                           datevar='Incident.Date',
                           statevar='state',
                           denom.var = 'all.visits',
                           adj.flu='auto',
-                          use.syndromes=c('breath','covid'),
+                          use.syndromes=c('breath','covid','both'),
                           time.res='day'
                           )
 
@@ -87,38 +101,38 @@ dates <-
 
 unexplained.cases <-
   excessExtract(ds = excess_cases1,
-                syndrome = "breath",
+                syndrome = c('both'),
                 extract.quantity = "unexplained.cases")
 
 unexplained.log.rr <-
   excessExtract(ds = excess_cases1,
-                syndrome = "breath",
+                syndrome = c('both'),
                 extract.quantity = "resid1")
 
 denom <-
  excessExtract(ds = excess_cases1,
-                syndrome = "breath",
+                syndrome = c('both'),
                 extract.quantity = "denom")
 
 
 upi <-
   excessExtract(ds = excess_cases1,
-                syndrome = "breath",
+                syndrome = c('both'),
                 extract.quantity = "upi")
 
 lpi <-
   excessExtract(ds = excess_cases1,
-                syndrome = "breath",
+                syndrome = c('both'),
                 extract.quantity = "lpi")
 
 obs <-
   ExcessILI::excessExtract(ds = excess_cases1,
-                syndrome = "breath",
+                syndrome = c('both'),
                 extract.quantity = "y")
 
 pred <-
   ExcessILI::excessExtract(ds = excess_cases1,
-                syndrome = "breath",
+                syndrome = c('both'),
                 extract.quantity = "pred")
 
 result.object <-

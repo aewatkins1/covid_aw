@@ -1,0 +1,174 @@
+---
+title: "Dynamic Excess ILI Map"
+author: "Anne Watkins"
+date: "4/4/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(reshape2)
+excess.ili=readRDS("./Data/extracted.output.ilinet.404.rds")
+excess.ili.data=as.data.frame(excess.ili)
+stnames=colnames(excess.ili.data)
+#colnames(excess.ili.data[2:ncol(excess.ili.data)])=substr(colnames(excess.ili.data[2:ncol(excess.ili.data)]),1,3)
+# excess.ili.data.m=melt(excess.ili.data,id.vars='dates')
+# excess.ili.data.m$variable=as.character(excess.ili.data.m$variable)
+# excess.ili.data.m$variable=substr(excess.ili.data.m$variable,1,nchar(excess.ili.data.m$variable)-3)
+# excess.ili.data.c=dcast(excess.ili.data.m,dates+value~variable,sum)
+# class(excess.ili)
+eili.d=as.data.frame(excess.ili[["obs"]])
+eili.d$dates=excess.ili[["dates"]]
+eili.dm=melt(eili.d,id.vars='dates')
+eili.de=as.data.frame(excess.ili[["pred"]])
+eili.de$dates=excess.ili[["dates"]]
+eili.dem=melt(eili.de,id.vars='dates')
+excess.ili.oe=merge(eili.dm,eili.dem,by=c('dates','variable'))
+colnames(excess.ili.oe)=c('dates','state','obs','pred')
+excess.ili.oe.rec=excess.ili.oe[which(excess.ili.oe$dates>='2019-12-01'),]
+excess.ili.oe.rec$obex=excess.ili.oe.rec$obs/excess.ili.oe.rec$pred
+excess.ili.oe.rec$dates2=0
+table(excess.ili.oe.rec$dates)
+excess.ili.oe.rec$dates2[1:44]=1
+excess.ili.oe.rec$dates2[45:88]=2
+excess.ili.oe.rec$dates2[89:132]=3
+excess.ili.oe.rec$dates2[133:176]=4
+excess.ili.oe.rec$dates2[177:220]=5
+excess.ili.oe.rec$dates2[221:264]=6
+excess.ili.oe.rec$dates2[265:308]=7
+excess.ili.oe.rec$dates2[309:352]=8
+excess.ili.oe.rec$dates2[353:396]=9
+excess.ili.oe.rec$dates2[397:440]=10
+excess.ili.oe.rec$dates2[441:484]=11
+excess.ili.oe.rec$dates2[485:528]=12
+excess.ili.oe.rec$dates2[529:572]=13
+excess.ili.oe.rec$dates2[573:616]=14
+excess.ili.oe.rec$dates2[617:660]=15
+excess.ili.oe.rec$dates2[661:704]=16
+excess.ili.oe.rec$dates2[705:748]=17
+```
+
+
+
+```{r}
+library(stringr)
+library(rgdal)
+ili.shp=readOGR("../../ExcessILI-master/tl_2019_us_state","tl_2019_us_state")
+ili.shp.base=readOGR("../../ExcessILI-master/tl_2019_us_state","tl_2019_us_state")
+ili.shp.base=ili.shp.base[-which(ili.shp@data$STUSPS%in%c("HI","VI","MP","GU","AK","AS","PR")),]
+#subset to only include states with data we have
+excess.ili.oe.rec$state=as.character(excess.ili.oe.rec$state)
+ili.shp=ili.shp[which(ili.shp@data$STUSPS%in%excess.ili.oe.rec$state),]
+#order shapefile by abbreviation
+ili.shp=ili.shp[order(ili.shp@data$STUSPS),]
+#add weekly ili obs/expected data to shapefile data
+#ili.shp@data$w=data.fw$Week[which(flu.shp$STATEFP%in%data.fw$FP)]
+ili.shp@data$Dec1=0
+ili.shp@data$Dec1=excess.ili.oe.rec$obex[which(excess.ili.oe.rec$dates2==1)]
+ili.shp@data$Dec8=0
+ili.shp@data$Dec8=excess.ili.oe.rec$obex[which(excess.ili.oe.rec$dates2==2)]
+ili.shp@data$Dec15=0
+ili.shp@data$Dec15=excess.ili.oe.rec$obex[which(excess.ili.oe.rec$dates2==3)]
+ili.shp@data$Dec22=0
+ili.shp@data$Dec22=excess.ili.oe.rec$obex[which(excess.ili.oe.rec$dates2==4)]
+ili.shp@data$Dec29=0
+ili.shp@data$Dec29=excess.ili.oe.rec$obex[which(excess.ili.oe.rec$dates2==5)]
+ili.shp@data$Jan5=0
+ili.shp@data$Jan5=excess.ili.oe.rec$obex[which(excess.ili.oe.rec$dates2==6)]
+ili.shp@data$Jan12=0
+ili.shp@data$Jan12=excess.ili.oe.rec$obex[which(excess.ili.oe.rec$dates2==7)]
+ili.shp@data$Jan19=0
+ili.shp@data$Jan19=excess.ili.oe.rec$obex[which(excess.ili.oe.rec$dates2==8)]
+ili.shp@data$Jan26=0
+ili.shp@data$Jan26=excess.ili.oe.rec$obex[which(excess.ili.oe.rec$dates2==9)]
+ili.shp@data$Feb2=0
+ili.shp@data$Feb2=excess.ili.oe.rec$obex[which(excess.ili.oe.rec$dates2==10)]
+ili.shp@data$Feb9=0
+ili.shp@data$Feb9=excess.ili.oe.rec$obex[which(excess.ili.oe.rec$dates2==11)]
+ili.shp@data$Feb16=0
+ili.shp@data$Feb16=excess.ili.oe.rec$obex[which(excess.ili.oe.rec$dates2==12)]
+ili.shp@data$Feb23=0
+ili.shp@data$Feb23=excess.ili.oe.rec$obex[which(excess.ili.oe.rec$dates2==13)]
+ili.shp@data$Mar1=0
+ili.shp@data$Mar1=excess.ili.oe.rec$obex[which(excess.ili.oe.rec$dates2==14)]
+ili.shp@data$Mar8=0
+ili.shp@data$Mar8=excess.ili.oe.rec$obex[which(excess.ili.oe.rec$dates2==15)]
+ili.shp@data$Mar15=0
+ili.shp@data$Mar15=excess.ili.oe.rec$obex[which(excess.ili.oe.rec$dates2==16)]
+ili.shp@data$Mar22=0
+ili.shp@data$Mar22=excess.ili.oe.rec$obex[which(excess.ili.oe.rec$dates2==17)]
+# for(j in 1){
+#   data1=excess.ili.oe.rec[which(excess.ili.oe.rec$dates2%in%j),]
+#   ili.shp@data$weekj=0
+#   ili.shp@data$weekj=data1$obex[which(ili.shp$STUSPS%in%data1$state)]
+# }
+#remove non-continental states/territories
+ili.shp=ili.shp[-which(ili.shp@data$NAME%in%c("Alaska","Puerto Rico","Hawaii")),]
+
+
+
+```
+
+
+```{r}
+##create map with 2 week breaks for typical flu season weeks and 4 week breaks during summer/off-season
+x <- c("rgdal", "rgeos", "maptools", "dplyr", "tidyr", "tmap")
+lapply(x, library, character.only = TRUE)
+
+
+qtm(shp=ili.shp.base,borders="black") +
+  qtm(shp=ili.shp, fill="Dec1", fill.palette="Blues", fill.breaks=c(0.01,0.5,1,1.5,2,2.5,3,3.5,4,5,6,7,8,9,10),borders="black")
+ # +tm_add_legend(type="fill",labels=c(0,0.25,0.5,0.75,1,1.25,1.5))#,1.75,2,2.25,2.5,2.75,3,3.25,3.5,3.75,4,4.5,5,5.5,6,6.5))
+
+qtm(shp=ili.shp.base,borders="black") +
+  qtm(shp=ili.shp, fill="Dec8", fill.palette="Blues", fill.breaks=c(0.01,0.5,1,1.5,2,2.5,3,3.5,4,5,6,7,8,9,10),borders="black")
+
+qtm(shp=ili.shp.base,borders="black") +
+  qtm(shp=ili.shp, fill="Dec15", fill.palette="Blues", fill.breaks=c(0.01,0.5,1,1.5,2,2.5,3,3.5,4,5,6,7,8,9,10),borders="black")
+
+qtm(shp=ili.shp.base,borders="black") +
+  qtm(shp=ili.shp, fill="Dec22", fill.palette="Blues", fill.breaks=c(0.01,0.5,1,1.5,2,2.5,3,3.5,4,5,6,7,8,9,10),borders="black")
+
+qtm(shp=ili.shp.base,borders="black") +
+  qtm(shp=ili.shp, fill="Dec29", fill.palette="Blues", fill.breaks=c(0.01,0.5,1,1.5,2,2.5,3,3.5,4,5,6,7,8,9,10),borders="black")
+
+qtm(shp=ili.shp.base,borders="black") +
+  qtm(shp=ili.shp, fill="Jan5", fill.palette="Blues", fill.breaks=c(0.01,0.5,1,1.5,2,2.5,3,3.5,4,5,6,7,8,9,10),borders="black")
+
+qtm(shp=ili.shp.base,borders="black") +
+  qtm(shp=ili.shp, fill="Jan12", fill.palette="Blues", fill.breaks=c(0.01,0.5,1,1.5,2,2.5,3,3.5,4,5,6,7,8,9,10),borders="black")
+
+qtm(shp=ili.shp.base,borders="black") +
+  qtm(shp=ili.shp, fill="Jan19", fill.palette="Blues", fill.breaks=c(0.01,0.5,1,1.5,2,2.5,3,3.5,4,5,6,7,8,9,10),borders="black")
+
+qtm(shp=ili.shp.base,borders="black") +
+  qtm(shp=ili.shp, fill="Jan26", fill.palette="Blues", fill.breaks=c(0.01,0.5,1,1.5,2,2.5,3,3.5,4,5,6,7,8,9,10),borders="black")
+
+qtm(shp=ili.shp.base,borders="black") +
+  qtm(shp=ili.shp, fill="Feb2", fill.palette="Blues", fill.breaks=c(0.01,0.5,1,1.5,2,2.5,3,3.5,4,5,6,7,8,9,10),borders="black")
+
+qtm(shp=ili.shp.base,borders="black") +
+  qtm(shp=ili.shp, fill="Feb9", fill.palette="Blues", fill.breaks=c(0.01,0.5,1,1.5,2,2.5,3,3.5,4,5,6,7,8,9,10),borders="black")
+
+qtm(shp=ili.shp.base,borders="black") +
+  qtm(shp=ili.shp, fill="Feb16", fill.palette="Blues", fill.breaks=c(0.01,0.5,1,1.5,2,2.5,3,3.5,4,5,6,7,8,9,10),borders="black")
+
+qtm(shp=ili.shp.base,borders="black") +
+  qtm(shp=ili.shp, fill="Feb23", fill.palette="Blues", fill.breaks=c(0.01,0.5,1,1.5,2,2.5,3,3.5,4,5,6,7,8,9,10),borders="black")
+
+qtm(shp=ili.shp.base,borders="black") +
+  qtm(shp=ili.shp, fill="Mar1", fill.palette="Blues", fill.breaks=c(0.01,0.5,1,1.5,2,2.5,3,3.5,4,5,6,7,8,9,10),borders="black")
+
+qtm(shp=ili.shp.base,borders="black") +
+  qtm(shp=ili.shp, fill="Mar8", fill.palette="Blues", fill.breaks=c(0.01,0.5,1,1.5,2,2.5,3,3.5,4,5,6,7,8,9,10),borders="black")
+
+qtm(shp=ili.shp.base,borders="black") +
+  qtm(shp=ili.shp, fill="Mar15", fill.palette="Blues", fill.breaks=c(0.01,0.5,1,1.5,2,2.5,3,3.5,4,5,6,7,8,9,10),borders="black")
+
+qtm(shp=ili.shp.base,borders="black") +
+  qtm(shp=ili.shp, fill="Mar22", fill.palette="Blues", fill.breaks=c(0.01,0.5,1,1.5,2,2.5,3,3.5,4,5,6,7,8,9,10),borders="black")
+```
+

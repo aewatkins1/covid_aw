@@ -1,0 +1,387 @@
+---
+title: "Reported and Excess Deaths COVID-19 Data by States"
+author: "Anne Watkins"
+date: "4/6/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r set up NYT data}
+library(reshape2)
+covid=read.csv("./Data/us-states.csv")
+covid$date=as.Date(covid$date)
+
+dates=c(unique(excess.ili.oe.rec$dates),as.Date('2020-03-29'),as.Date('2020-04-05'))
+covid2=covid
+covid2=covid2[which(covid2$date %in% dates),]
+covid2=merge(covid2,pop,by=c('state'))
+covid2$deathrate=0
+covid2$deathrate=covid2$deaths/covid2$size*1000000
+
+
+```
+
+```{r reported deaths, NYT}
+library(stringr)
+library(rgdal)
+us.shp=readOGR("../../ExcessILI-master/tl_2019_us_state","tl_2019_us_state")
+
+us.shp=us.shp[-which(us.shp@data$STUSPS%in%c("HI","VI","MP","GU","AK","AS","PR")),]
+
+#subset to only include continental US states
+covid2=covid2[-which(covid2$state %in% c("Hawaii","Virgin Islands","Northern Mariana Islands","Guam","Alaska","Puerto Rico")),]
+
+
+covid2$state=as.character(covid2$state)
+#ili.shp=ili.shp[which(ili.shp@data$STUSPS%in%excess.ili.oe.rec$state),]
+#order shapefile by abbreviation
+us.shp=us.shp[order(us.shp@data$NAME),]
+covid2=covid2[order(covid2$state),]
+
+# us.shp@data$Jan26=0
+# us.shp@data$Jan26[which(us.shp@data$NAME%in%covid2$state[which(covid2$date=='2020-01-26')])]=covid2$deaths[which(covid2$date=='2020-01-26')]
+# us.shp@data$Feb2=0
+# us.shp@data$Feb2[which(us.shp@data$NAME%in%covid2$state[which(covid2$date=='2020-02-02')])]=covid2$deaths[which(covid2$date=='2020-02-02')]
+# us.shp@data$Feb9=0
+# us.shp@data$Feb9[which(us.shp@data$NAME%in%covid2$state[which(covid2$date=='2020-02-09')])]=covid2$deaths[which(covid2$date=='2020-02-09')]
+# us.shp@data$Feb16=0
+# us.shp@data$Feb16[which(us.shp@data$NAME%in%covid2$state[which(covid2$date=='2020-02-16')])]=covid2$deaths[which(covid2$date=='2020-02-16')]
+us.shp@data$Feb23=0
+us.shp@data$Feb23[which(us.shp@data$NAME%in%covid2$state[which(covid2$date=='2020-02-23')])]=covid2$deathrate[which(covid2$date=='2020-02-23')]
+us.shp@data$Mar1=0
+us.shp@data$Mar1[which(us.shp@data$NAME%in%covid2$state[which(covid2$date=='2020-03-01')])]=covid2$deathrate[which(covid2$date=='2020-03-01')]
+us.shp@data$Mar8=0
+us.shp@data$Mar8[which(us.shp@data$NAME%in%covid2$state[which(covid2$date=='2020-03-08')])]=covid2$deathrate[which(covid2$date=='2020-03-08')]
+us.shp@data$Mar15=0
+us.shp@data$Mar15[which(us.shp@data$NAME%in%covid2$state[which(covid2$date=='2020-03-15')])]=covid2$deathrate[which(covid2$date=='2020-03-15')]
+us.shp@data$Mar22=0
+us.shp@data$Mar22[which(us.shp@data$NAME%in%covid2$state[which(covid2$date=='2020-03-22')])]=covid2$deathrate[which(covid2$date=='2020-03-22')]
+us.shp@data$Mar29=0
+us.shp@data$Mar29[which(us.shp@data$NAME%in%covid2$state[which(covid2$date=='2020-03-29')])]=covid2$deathrate[which(covid2$date=='2020-03-29')]
+us.shp@data$Apr5=0
+us.shp@data$Apr5[which(us.shp@data$NAME%in%covid2$state[which(covid2$date=='2020-04-05')])]=covid2$deathrate[which(covid2$date=='2020-04-05')]
+```
+
+
+```{r}
+x <- c("rgdal", "rgeos", "maptools", "dplyr", "tidyr", "tmap")
+lapply(x, library, character.only = TRUE)
+
+
+#qtm(shp=ili.shp.base,borders="black") +
+# qtm(shp=us.shp, fill="Jan26", fill.palette="Blues",
+#     fill.breaks=c(0,2.5,5,7.5,10,15,25,50,75,100,150,200,250,350,500,750,1000),
+#     borders="black")
+#   
+# qtm(shp=us.shp, fill="Feb2", fill.palette="Blues",
+#     fill.breaks=c(0,10,25,50,100,250,500,750,1000,1500,2000,2500,3000,4000,5000),
+#     borders="black")
+# 
+# qtm(shp=us.shp, fill="Feb9", fill.palette="Blues",
+#     fill.breaks=c(0,10,25,50,100,250,500,750,1000,1500,2000,2500,3000,4000,5000),
+#     borders="black")
+# 
+# qtm(shp=us.shp, fill="Feb16", fill.palette="Blues",
+#     fill.breaks=c(0,10,25,50,100,250,500,750,1000,1500,2000,2500,3000,4000,5000),
+#     borders="black")
+
+qtm(shp=us.shp, fill="Feb23", fill.palette="Blues",
+    fill.breaks=c(0,2,5,8,10,15,25,50,75,100,150,200,250,350,500,750,1000),
+    borders="black")
+
+qtm(shp=us.shp, fill="Mar1", fill.palette="Blues",
+    fill.breaks=c(0,2,5,8,10,15,25,50,75,100,150,200,250,350,500,750,1000),
+    borders="black")
+
+qtm(shp=us.shp, fill="Mar8", fill.palette="Blues",
+    fill.breaks=c(0,2,5,8,10,15,25,50,75,100,150,200,250,350,500,750,1000),
+    borders="black")
+
+qtm(shp=us.shp, fill="Mar15", fill.palette="Blues",
+    fill.breaks=c(0,2,5,8,10,15,25,50,75,100,150,200,250,350,500,750,1000),
+    borders="black")
+
+qtm(shp=us.shp, fill="Mar22", fill.palette="Blues",
+    fill.breaks=c(0,2,5,8,10,15,25,50,75,100,150,200,250,350,500,750,1000),
+    borders="black")
+
+qtm(shp=us.shp, fill="Mar29", fill.palette="Blues",
+    fill.breaks=c(0,2,5,8,10,15,25,50,75,100,150,200,250,350,500,750,1000),
+    borders="black")
+
+qtm(shp=us.shp, fill="Apr5", fill.palette="Blues",
+    fill.breaks=c(0,2,5,8,10,15,25,50,75,100,150,200,250,350,500,750,1000),
+    borders="black")
+```
+
+
+```{r excess deaths}
+excess_deaths=readRDS("./Data/excess_deaths.rds")
+
+# excess_deaths.m=melt(excess_deaths,id.vars='dates')
+# colnames(excess_deaths.m)=c('dates','state','deaths')
+# excess_deaths.m=excess_deaths.m[order(excess_deaths.m$state),]
+ excess_deaths.m=excess_deaths.m[-which(excess_deaths.m$state %in% c('HI','AK')),]
+
+excess_deaths_cumsum=readRDS('./Data/excess_deaths_cumsum_reg_322.rds')
+# excess_deaths_cumsum.m=melt(excess_deaths_cumsum,id.vars='dates')
+# colnames(excess_deaths_cumsum.m)=c('dates','state','deaths')
+# excess_deaths_cumsum.m=excess_deaths_cumsum.m[order(excess_deaths_cumsum.m$state),]
+excess_deaths_cumsum=excess_deaths_cumsum[-which(excess_deaths_cumsum$abbr %in% c('HI','AK')),]
+
+# pop=read.csv('./Data/populationsize2019.csv')
+# edpop=merge(excess_deaths_cumsum.m, pop, by.x=c('state'), by.y=c('abbr'))
+# edpop$size=as.numeric(as.character(edpop$size))
+# edpop$deathrate=0
+# edpop$deathrate=(edpop$deaths)/(edpop$size)*100000
+#excess death rate per million population
+
+```
+
+```{r set up shape file with data}
+us.shp2=readOGR("../../ExcessILI-master/tl_2019_us_state","tl_2019_us_state")
+us.shp2=us.shp2[-which(us.shp2@data$STUSPS%in%c("HI","VI","MP","GU","AK","AS","PR")),]
+#us.shp2=us.shp2[which(us.shp2@data$STUSPS %in% excess_deaths.m$state),]
+excess_deaths_cumsum=excess_deaths_cumsum[which(excess_deaths_cumsum$abbr%in% excess_deaths.m$state),]
+
+us.shp.base=readOGR("../../ExcessILI-master/tl_2019_us_state","tl_2019_us_state")
+us.shp.base=us.shp.base[-which(us.shp.base@data$STUSPS%in%c("HI","VI","MP","GU","AK","AS","PR")),]
+
+us.shp2=us.shp2[order(us.shp2@data$STUSPS),]
+us.shp.base=us.shp.base[order(us.shp.base@data$STUSPS),]
+excess_deaths_cumsum=excess_deaths_cumsum[order(excess_deaths_cumsum$abbr),]
+# us.shp2@data$Jan26=0
+# us.shp2@data$Jan26=excess_deaths.m$deaths[which(excess_deaths.m$dates=='2020-01-26')]
+# us.shp2@data$Feb2=0
+# us.shp2@data$Feb2=excess_deaths.m$deaths[which(excess_deaths.m$dates=='2020-02-02')]
+# us.shp2@data$Feb9=0
+# us.shp2@data$Feb9=excess_deaths.m$deaths[which(excess_deaths.m$dates=='2020-02-09')]
+# us.shp2@data$Feb16=0
+# us.shp2@data$Feb16=excess_deaths.m$deaths[which(excess_deaths.m$dates=='2020-02-16')]
+# us.shp2@data$Feb23=0
+# us.shp2@data$Feb23=excess_deaths.m$deaths[which(excess_deaths.m$dates=='2020-02-23')]
+# us.shp2@data$Mar1=0
+# us.shp2@data$Mar1=excess_deaths.m$deaths[which(excess_deaths.m$dates=='2020-03-01')]
+# us.shp2@data$Mar8=0
+# us.shp2@data$Mar8=excess_deaths.m$deaths[which(excess_deaths.m$dates=='2020-03-08')]
+# us.shp2@data$Mar15=0
+# us.shp2@data$Mar15=excess_deaths.m$deaths[which(excess_deaths.m$dates=='2020-03-15')]
+# us.shp2@data$Feb2=0
+# us.shp2@data$Feb2=edpop$deathrate[which(edpop$dates=='2020-02-02')]
+us.shp2@data$Feb9=NA
+us.shp2@data$Feb9[-which(us.shp2@data$STUSPS%in% miss.st)] =excess_deaths_cumsum$deathrate[which(excess_deaths_cumsum$dates=='2020-02-09')]
+us.shp2@data$Feb16=NA
+us.shp2@data$Feb16=excess_deaths_cumsum$deathrate[which(excess_deaths_cumsum$dates=='2020-02-16')]
+us.shp2@data$Feb23=NA
+us.shp2@data$Feb23=excess_deaths_cumsum$deathrate[which(excess_deaths_cumsum$dates=='2020-02-23')]
+us.shp2@data$Mar1=NA
+us.shp2@data$Mar1[which(us.shp2@data$STUSPS%in% excess_deaths.m$state)]=excess_deaths_cumsum$deathrate[which(excess_deaths_cumsum$dates=='2020-03-01')]
+us.shp2@data$Mar8=NA
+us.shp2@data$Mar8[which(us.shp2@data$STUSPS%in% excess_deaths.m$state)]=excess_deaths_cumsum$deathrate[which(excess_deaths_cumsum$dates=='2020-03-08')]
+us.shp2@data$Mar15=NA
+us.shp2@data$Mar15[which(us.shp2@data$STUSPS%in% excess_deaths.m$state)]=excess_deaths_cumsum$deathrate[which(excess_deaths_cumsum$dates=='2020-03-15')]
+us.shp2@data$Mar22=NA
+us.shp2@data$Mar22[which(us.shp2@data$STUSPS%in% excess_deaths.m$state)]=excess_deaths_cumsum$deathrate[which(excess_deaths_cumsum$dates=='2020-03-22')]
+```
+
+
+```{r}
+# qtm(shp=us.shp.base,borders="black") +
+#   qtm(shp=us.shp2, fill='Jan26', fill.palette="RdBu",
+#     fill.breaks=c(-40,-20,-10,-5,0,5,10,20,40,60,80,100,125,150,175,200),
+#     borders="black")
+# 
+# qtm(shp=us.shp.base,borders="black") +
+#   qtm(shp=us.shp2, fill='Feb2', fill.palette="Reds",
+#     fill.breaks=c(-5,0,0.25,0.5,0.75,1,1.25,1.5,1.75,2,2.5,3,4),
+#     borders="black")
+
+qtm(shp=us.shp.base,borders="black") +
+  qtm(shp=us.shp2, fill='Feb9', fill.palette="Reds",
+    fill.breaks=c(-5,0,0.01,0.5,1,1.5,2,2.5,5,7.5,10,15,20),
+     borders="black")
+ 
+ qtm(shp=us.shp.base,borders="black") +
+   qtm(shp=us.shp2, fill='Feb16', fill.palette="Reds",
+     fill.breaks=c(-5,0,0.01,0.5,1,1.5,2,2.5,5,7.5,10,15,20),
+     borders="black")
+
+qtm(shp=us.shp.base,borders="black") +
+  qtm(shp=us.shp2, fill='Feb23', fill.palette='Reds',
+    fill.breaks=c(-5,0,0.01,0.5,1,1.5,2,2.5,5,7.5,10,15,20),
+    borders="black")
+
+(qtm(shp=us.shp.base,borders="black") +
+  qtm(shp=us.shp2, fill='Mar1', fill.palette="Reds",
+    fill.breaks=c(-5,0,0.01,0.5,1,1.5,2,2.5,5,7.5,10,15,20),
+    borders="black"))
+
+(qtm(shp=us.shp.base,borders="black") +
+  qtm(shp=us.shp2, fill='Mar8', fill.palette="Reds",
+    fill.breaks=c(-5,0,0.01,0.5,1,1.5,2,2.5,5,7.5,10,15,20),
+    borders="black"))
+
+(qtm(shp=us.shp.base,borders="black") +
+  qtm(shp=us.shp2, fill='Mar15', fill.palette="Reds",
+    fill.breaks=c(-5,0,0.01,0.5,1,1.5,2,2.5,5,7.5,10,15,20),
+    borders="black"))
+
+```
+
+
+```{r reported deaths covid tracking}
+covid.t=readRDS('./Data/cov.track.reg')
+covid.t=covid.t[-which(covid.t$state.y %in% c("HI","AK")),]
+us.shp3=readOGR("../../ExcessILI-master/tl_2019_us_state","tl_2019_us_state")
+us.shp3=us.shp3[-which(us.shp3@data$STUSPS%in%c("HI","VI","MP","GU","AK","AS","PR")),]
+us.shp3=us.shp3[which(us.shp3@data$STUSPS %in% covid.t$state.y),]
+
+excess_deaths_cumsum=excess_deaths_cumsum[which(excess_deaths_cumsum$abbr%in% excess_deaths.m$state),]
+#covid.t=covid.t[which(covid.t$state.y%in%excess_deaths)] - dont need to cut bc all states seem to have covid tracking data
+
+covid.t=covid.t[order(covid.t$state.y),]
+us.shp3=us.shp3[order(us.shp3@data$STUSPS),]
+
+us.shp3@data$Mar1=0
+us.shp3@data$Mar1=covid.t$cum.death.per.capita[which(covid.t$test.dates=='2020-03-01')]
+us.shp3@data$Mar8=0
+us.shp3@data$Mar8=covid.t$cum.death.per.capita[which(covid.t$test.dates=='2020-03-08')]
+us.shp3@data$Mar15=0
+us.shp3@data$Mar15=covid.t$cum.death.per.capita[which(covid.t$test.dates=='2020-03-15')]
+us.shp3@data$Mar22=0
+us.shp3@data$Mar22=covid.t$cum.death.per.capita[which(covid.t$test.dates=='2020-03-22')]
+us.shp3@data$Mar29=0
+us.shp3@data$Mar29=covid.t$cum.death.per.capita[which(covid.t$test.dates=='2020-03-29')]
+
+
+
+#qtm(shp=us.shp.base,borders="black") +
+  qtm(shp=us.shp3, fill='Mar1', fill.palette="Reds",
+    fill.breaks=c(0,0.1,0.25,0.5,1,1.25,1.5,1.75,2,3,5,8,10,15,25,35,50),
+    borders="black")
+
+#qtm(shp=us.shp.base,borders="black") +
+  qtm(shp=us.shp3, fill='Mar8', fill.palette="Reds",
+    fill.breaks=c(0,0.1,0.25,0.5,1,1.25,1.5,1.75,2,3,5,8,10,15,25,35,50),
+    borders="black")
+
+#qtm(shp=us.shp.base,borders="black") +
+qtm(shp=us.shp3, fill='Mar15', fill.palette="Reds",
+    fill.breaks=c(0,0.1,0.25,0.5,1,1.25,1.5,1.75,2,3,5,8,10,15,25,35,50),
+    borders="black")
+
+#qtm(shp=us.shp.base,borders="black") +
+qtm(shp=us.shp3, fill='Mar22', fill.palette="Reds",
+    fill.breaks=c(0,0.1,0.25,0.5,1,1.25,1.5,1.75,2,3,5,8,10,15,25,35,50),
+    borders="black")
+
+#qtm(shp=us.shp.base,borders="black") +
+qtm(shp=us.shp3, fill='Mar29', fill.palette="Reds",
+    fill.breaks=c(0,0.1,0.25,0.5,1,1.25,1.5,1.75,2,3,5,8,10,15,25,35,50),
+    borders="black")
+
+
+rd_mar8=tm_shape(shp=us.shp3)+
+  tm_borders(col='black',lwd = 0.5)+
+  tm_fill(col='Mar8',palette = 'Reds',breaks = c(-5,0,0.01,0.5,1,1.5,2,2.5,3.5,5,7.5,10,15,20,25))+
+  tm_layout(legend.show=F,title = 'Reported COVID-19 Deaths March 8, 2020',title.position = c('left','BOTTOM'))
+
+rd_mar15=tm_shape(shp=us.shp3)+
+  tm_borders(col='black',lwd = 0.5)+
+  tm_fill(col='Mar15',palette = 'Reds',breaks = c(-5,0,0.01,0.5,1,1.5,2,2.5,3.5,5,7.5,10,15,20,25))+
+  tm_layout(legend.show=F,title = 'Reported COVID-19 Deaths March 15, 2020',title.position = c('left','BOTTOM'))
+
+rd_mar22=tm_shape(shp=us.shp3)+
+  tm_borders(col='black',lwd = 0.5)+
+  tm_fill(col='Mar22',palette = 'Reds',breaks = c(0-5,0,0.01,0.5,1,1.5,2,2.5,3.5,5,7.5,10,15,20,25))+
+  tm_layout(legend.show=F,title = 'Reported COVID-19 Deaths March 22, 2020',title.position = c('left','BOTTOM'))
+
+rd_mar29=tm_shape(shp=us.shp3)+
+  tm_borders(col='black',lwd = 0.5)+
+  tm_fill(col='Mar29',palette = 'Reds',breaks = c(-5,0,0.01,0.5,1,1.5,2,2.5,3.5,5,7.5,10,15,20,25))+
+  tm_layout(legend.show=F,title = 'Reported COVID-19 Deaths March 29, 2020',title.position = c('left','BOTTOM'))
+
+legend.map=tm_shape(shp=us.shp3)+
+  tm_fill(col='Mar29',palette = 'Reds',breaks = c(-5,0,0.01,0.5,1,1.5,2,2.5,3.5,5,7.5,10,15,20,25), title='Reported Deaths Per 1,000,000')+
+  tm_layout(legend.only = TRUE)
+  
+
+
+ed_mar1=tm_shape(shp=us.shp2)+
+  tm_borders(col='black',lwd = 0.5)+
+  #tm_shape(shp=us.shp2)+
+  tm_fill(col='Mar1',palette='Reds',breaks=c(-5,0,0.01,0.5,1,1.5,2,2.5,3.5,5,7.5,10,15,20,25))+
+  tm_layout(legend.show=F,title = 'Excess P&I Deaths March 1, 2020',title.position = c('left','BOTTOM'))
+  
+ed_mar8=tm_shape(shp=us.shp2)+
+  tm_borders(col='black',lwd = 0.5)+
+  #tm_shape(shp=us.shp2)+
+  tm_fill(col='Mar8',palette='Reds',breaks=c(-5,0,0.01,0.5,1,1.5,2,2.5,3.5,5,7.5,10,15,20,25))+
+  tm_layout(legend.show=F,title = 'Excess P&I Deaths March 8, 2020',title.position = c('left','BOTTOM'))
+   
+ed_mar15=tm_shape(shp=us.shp2)+
+  tm_borders(col='black',lwd = 0.5)+
+  #tm_shape(shp=us.shp2)+
+  tm_fill(col='Mar15',palette='Reds',breaks=c(-5,0,0.01,0.5,1,1.5,2,2.5,3.5,5,7.5,10,15,20,25))+
+  tm_layout(legend.show=F,title = 'Excess P&I Deaths March 15, 2020',title.position = c('left','BOTTOM'))
+
+ed_mar22=tm_shape(shp=us.shp2)+
+  tm_borders(col='black',lwd = 0.5)+
+  #tm_shape(shp=us.shp2)+
+  tm_fill(col='Mar22',palette='Reds',breaks=c(-5,0,0.01,0.5,1,1.5,2,2.5,3.5,5,7.5,10,15,20,25))+
+  tm_layout(legend.show=F,title = 'Excess P&I Deaths March 22, 2020',title.position = c('left','BOTTOM'))
+  
+legend.map.e=tm_shape(shp=us.shp2)+
+  tm_fill(col='Mar22',palette = 'Reds',breaks=c(-5,0,0.01,0.5,1,1.5,2,2.5,3.5,5,7.5,10,15,20,25), title='Excess Deaths Per 1,000,000')+
+  tm_layout(legend.only = TRUE)
+
+
+
+# library(grid)
+# grid.newpage()
+# page.layout <- grid.layout(nrow = 2, ncol = 4, widths=c(.4,.6), heights=c(.6,.4))
+# pushViewport(viewport(layout = page.layout))
+# 
+# print(ed_mar8, vp=viewport(layout.pos.row = 1, layout.pos.col = 1))
+# print(ed_mar15, vp=viewport(layout.pos.row = 1, layout.pos.col = 2))
+# print(ed_mar22, vp=viewport(layout.pos.row = 1, layout.pos.col = 3))
+# print(legend.map.e, vp=viewport(layout.pos.row = 1, layout.pos.col = 4))
+# print(rd_mar8, vp=viewport(layout.pos.row = 2, layout.pos.col = 1))
+# print(rd_mar15, vp=viewport(layout.pos.row = 2, layout.pos.col = 2))
+# print(rd_mar22, vp=viewport(layout.pos.row = 2, layout.pos.col = 3))
+# print(legend.map, vp=viewport(layout.pos.row = 2, layout.pos.col = 4))
+
+tmap_arrange(ed_mar8,ed_mar15,ed_mar22,legend.map.e,rd_mar8,rd_mar15,rd_mar22,legend.map,nrow=2,ncol=4)
+```
+
+```{r try to automate - doesn't work}
+dates.ed=unique(excess_deaths_cumsum$dates)
+
+
+##won't recognize date in ''
+edeath.map.func=function(date.ed){
+  us.shp2@data$date.ed=NA
+  us.shp2@data$date.ed[which(us.shp2@data$STUSPS%in% excess_deaths.m$state)] = excess_deaths_cumsum$deathrate[which(excess_deaths_cumsum$dates==date.ed)]
+  
+  ed_date.ed <- tm_shape(shp=us.shp2)+
+  tm_borders(col='black',lwd = 0.5)+
+  tm_fill(col='date.ed',palette='Reds',breaks=c(-5,0,0.01,0.5,1,1.5,2,2.5,3.5,5,7.5,10,15,20,25))+
+  tm_layout(legend.show=F,title = 'Excess P&I Deaths date.ed',title.position = c('left','BOTTOM'))
+  
+  output=c('map'=as. ed_date.ed)
+  return(output)
+}
+
+maps=lapply(dates.ed,edeath.map.func)
+
+us.shp2@data$legend=NA
+us.shp2@data$legend=excess_deaths_cumsum$deathrate[which(excess_deaths_cumsum$dates==tail(excess_deaths_cumsum$dates,n = 1))]
+  
+legend.map.e=tm_shape(shp=us.shp2)+
+  tm_fill(col='legend',palette = 'Reds',breaks=c(-5,0,0.01,0.5,1,1.5,2,2.5,3.5,5,7.5,10,15,20,25), title='Excess Deaths Per 1,000,000')+
+  tm_layout(legend.only = TRUE)
+```
+
